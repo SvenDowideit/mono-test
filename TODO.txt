@@ -1,0 +1,3 @@
+A
+
+make a minimal image - see http://www.onegeek.com.au/articles/a-nancy-net-microservice-running-on-docker-in-under-20mb
