@@ -35,7 +35,63 @@ namespace ConsoleApplication1
     {
         public HelloWorld()
         {
-            Get["/"] = _ => "Hello mono World!";
+            Get["/"] = _ =>
+            {
+                return "Hello mono World: asked for / ";
+            };
+            Get["/test/{req}"] = parameters =>
+            {
+                return "Hello mono World: asked for test "+ parameters.req;
+            };
         }
     }
+    public class DockerPlugin: Nancy.NancyModule
+    {
+        public DockerPlugin()
+        {
+            Get["/Plugin.Activate"] = _ =>
+            {
+                Console.WriteLine("/Plugin.Activate");
+                return @"{""Implements"": [""VolumeDriver""]}";
+            };
+        }
+    }
+    public class DockerVolumePlugin : Nancy.NancyModule
+    {
+        public DockerVolumePlugin()
+        {
+            Get["/VolumeDriver.Create"] = _ =>
+            // {"Name": "volume_name"}
+            {
+                Console.WriteLine("/VolumeDriver.Create");
+                return @"{""Err"": null}"; // or string error
+            };
+            Get["/VolumeDriver.Remove"] = _ =>
+            // {"Name": "volume_name"}
+            {
+                Console.WriteLine("/VolumeDriver.Remove");
+                return @"{""Err"": null}"; // or string error
+            };
+            Get["/VolumeDriver.Unmount"] = _ =>
+            // {"Name": "volume_name"}
+            {
+                Console.WriteLine("/VolumeDriver.Unmount");
+                return @"{""Err"": null}"; // or string error
+            };
+            Get["/VolumeDriver.Mount"] = _ =>
+            // {"Name": "volume_name"}
+            {
+                Console.WriteLine("/VolumeDriver.Mount");
+                return @"{""Mountpoint"": "" / path / to / directory / on / host"", ""Err"": null}"; // or string error
+            };
+            Get["/VolumeDriver.Path"] = _ =>
+            // {"Name": "volume_name"}
+            {
+                Console.WriteLine("/VolumeDriver.Path");
+                return @"{""Mountpoint"": "" / path / to / directory / on / host"", ""Err"": null}"; // or string error
+            };
+
+        }
+    }
+
 }
