@@ -4,4 +4,6 @@ build:
 	docker build -t mono-app .
 
 run:
-	docker run --rm mono-app mono ConsoleApplication1.exe
+	docker rm -vf nancyapp || true
+	docker run -d -p 8000:8000 --name nancyapp \
+		mono-app mono ConsoleApplication1.exe
