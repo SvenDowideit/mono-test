@@ -45,14 +45,31 @@ namespace ConsoleApplication1
             };
         }
     }
+
+    // TODO: compare outputs :)
+//docker @boot2docker:~$ curl -X POST -I http://10.10.10.20:8000/Plugin.Activate
+//HTTP/1.1 200 OK
+//Transfer-Encoding: chunked
+//Content-Type: text/html
+//Server: Microsoft-HTTPAPI/2.0
+//Date: Sun, 16 Aug 2015 06:08:00 GMT
+
+//docker@boot2docker:~$ curl -X POST -I http://127.0.0.1:8888/Plugin.Activate
+//HTTP/1.1 200 OK
+//Content-Type: appplication/vnd.docker.plugins.v1+json
+//Date: Sun, 16 Aug 2015 06:08:06 GMT
+//Content-Length: 33
+
     public class DockerPlugin: Nancy.NancyModule
     {
         public DockerPlugin()
         {
-            Get["/Plugin.Activate"] = _ =>
+            Post["/Plugin.Activate"] = _ =>
             {
                 Console.WriteLine("/Plugin.Activate");
-                return @"{""Implements"": [""VolumeDriver""]}";
+                var response = (Nancy.Response)@"{""Implements"": [""VolumeDriver""]}";
+                response.ContentType = @"application/vnd.docker.plugins.v1+json";
+                return response;
             };
         }
     }
@@ -60,35 +77,35 @@ namespace ConsoleApplication1
     {
         public DockerVolumePlugin()
         {
-            Get["/VolumeDriver.Create"] = _ =>
+            Post["/VolumeDriver.Create"] = _ =>
             // {"Name": "volume_name"}
             {
                 Console.WriteLine("/VolumeDriver.Create");
                 return @"{""Err"": null}"; // or string error
             };
-            Get["/VolumeDriver.Remove"] = _ =>
+            Post["/VolumeDriver.Remove"] = _ =>
             // {"Name": "volume_name"}
             {
                 Console.WriteLine("/VolumeDriver.Remove");
                 return @"{""Err"": null}"; // or string error
             };
-            Get["/VolumeDriver.Unmount"] = _ =>
+            Post["/VolumeDriver.Unmount"] = _ =>
             // {"Name": "volume_name"}
             {
                 Console.WriteLine("/VolumeDriver.Unmount");
                 return @"{""Err"": null}"; // or string error
             };
-            Get["/VolumeDriver.Mount"] = _ =>
+            Post["/VolumeDriver.Mount"] = _ =>
             // {"Name": "volume_name"}
             {
                 Console.WriteLine("/VolumeDriver.Mount");
-                return @"{""Mountpoint"": "" / path / to / directory / on / host"", ""Err"": null}"; // or string error
+                return @"{""Mountpoint"": ""/etc"", ""Err"": null}"; // or string error
             };
-            Get["/VolumeDriver.Path"] = _ =>
+            Post["/VolumeDriver.Path"] = _ =>
             // {"Name": "volume_name"}
             {
                 Console.WriteLine("/VolumeDriver.Path");
-                return @"{""Mountpoint"": "" / path / to / directory / on / host"", ""Err"": null}"; // or string error
+                return @"{""Mountpoint"": ""/etc"", ""Err"": null}"; // or string error
             };
 
         }
