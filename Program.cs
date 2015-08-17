@@ -2,6 +2,7 @@
 using Nancy.Hosting.Self;
 using Nancy.ModelBinding;
 using Nancy.Extensions;
+using Renci.SshNet;
 
 namespace ConsoleApplication1
 {
@@ -47,6 +48,8 @@ namespace ConsoleApplication1
             };
         }
     }
+
+    // TODO: can I subscribe to the docker events and thus know what the container ID is?
 
     // TODO: compare outputs :)
 //docker @boot2docker:~$ curl -X POST -I http://10.10.10.20:8000/Plugin.Activate
@@ -141,19 +144,70 @@ namespace ConsoleApplication1
             {
                 Request.Headers.ContentType = @"application/json";
                 var vol = this.Bind<Vol>();
-                Console.WriteLine("/VolumeDriver.Mount " + vol.Name);
-                return @"{""Mountpoint"": ""/etc"", ""Err"": null}"; // or string error
+                string destDir = Send.getDirHash(vol.Name);
+                Console.WriteLine("/VolumeDriver.Mount: {0} : {1}", vol.Name, destDir);
+                Send.dir("C:/Users/sven/src/mono-test", destDir);
+                return @"{""Mountpoint"": """+ destDir+ @""", ""Err"": null}"; // or string error
             };
             Post["/VolumeDriver.Path"] = _ =>
             // {"Name": "volume_name"}
             {
                 Request.Headers.ContentType = @"application/json";
                 var vol = this.Bind<Vol>();
-                Console.WriteLine("/VolumeDriver.Path " + vol.Name);
-                return @"{""Mountpoint"": ""/etc"", ""Err"": null}"; // or string error
+                string destDir = Send.getDirHash(vol.Name);
+                Console.WriteLine("/VolumeDriver.Path: {0} : {1}", vol.Name, destDir);
+                return @"{""Mountpoint"": """ + destDir + @""", ""Err"": null}"; // or string error
             };
 
         }
     }
+    public class Send
+    {
+        public static string getDirHash(string dir)
+        {
+            int hash = dir.GetHashCode();
+            return String.Format("/tmp/{0}/", hash);
+        }
+        public static void dir(string indir, string outdir)
+        {
+            string username = @"docker";
+            // Setup Credentials and Server Information
+            string dockerHost = @"192.168.119.129";
+            ConnectionInfo ConnNfo = new ConnectionInfo(dockerHost, 22, username,
+                new AuthenticationMethod[]{
 
+                // Password based Authentication
+                new PasswordAuthenticationMethod(username, @"tcuser"),
+
+                // Key Based Authentication (using keys in OpenSSH Format)
+                //new PrivateKeyAuthenticationMethod(username,new PrivateKeyFile[]{
+                //    new PrivateKeyFile(@"..\openssh.key","passphrase")
+                //}),
+                }
+            );
+            //string dir = System.IO.Path.GetDirectoryName(outfile);
+            // Execute a (SHELL) Command - prepare upload directory
+            using (var sshclient = new SshClient(ConnNfo))
+            {
+                sshclient.Connect();
+//                using (var cmd = sshclient.CreateCommand(@"ls /etc"))
+                using (var cmd = sshclient.CreateCommand(@"mkdir -p " + outdir + @" && chmod +rw " + outdir))
+                {
+                    string output = cmd.Execute();
+                    Console.WriteLine("Command>" + cmd.CommandText);
+                    Console.WriteLine(output);
+                    Console.WriteLine(cmd.Result);
+                    Console.WriteLine("Return Value = {0}", cmd.ExitStatus);
+                }
+                sshclient.Disconnect();
+            }
+            // Upload A File
+            using (var scp = new ScpClient(ConnNfo))
+            {
+                scp.Connect();
+                scp.Upload(new System.IO.DirectoryInfo(indir), outdir);
+                scp.Disconnect();
+            }
+        }
+    }
 }
